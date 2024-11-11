@@ -20,3 +20,13 @@ go run ./cil <path>
 | ---- | ------ |
 | ctrl + c | exit |
 | down arrow | next line |
+
+## Architecture
+
+Contains one TUI component now. Rendering UI elements in nested way:
+Character > Line > Box > Program.
+
+Libraries used:
+
+- [Bubble Tea](https://github.com/charmbracelet/bubbletea) - for building TUI by blocks.
+- [Lip Gloss](https://github.com/charmbracelet/lipgloss) - for styling application: drawing box and coloring letters.
