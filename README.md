@@ -12,6 +12,8 @@ From root of the project:
 go run ./cil <path>
 ```
 
+![image](https://github.com/user-attachments/assets/8d5946d9-519a-4152-aed1-f66cfd0ad1a4)
+
 ### Keybindings
 
 | Keys | Action |
