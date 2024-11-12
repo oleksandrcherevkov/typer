@@ -33,7 +33,7 @@ type Program struct {
 	textClosing func()
 	position    int
 	lineRaw     string
-	line        []lines.Character
+	line        []*lines.Character
 }
 
 func New(filePath string) *Program {
@@ -113,8 +113,11 @@ func (p *Program) nextLine() (tea.Model, tea.Cmd) {
 }
 
 func (p *Program) deleteChar() (tea.Model, tea.Cmd) {
+	current := p.line[p.position]
+	current.Unselect()
 	p.position--
-	p.line[p.position].CheckStatus = lines.None
+	current = p.line[p.position]
+	current.Select()
 	return p, nil
 }
 
@@ -128,13 +131,13 @@ func (p *Program) checkChar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	char := msg.Runes[0]
-	expected := p.line[p.position].Expected
-	p.line[p.position].Typed = char
-	if char == expected {
-		p.line[p.position].CheckStatus = lines.Correct
-	} else {
-		p.line[p.position].CheckStatus = lines.Wrong
-	}
+	current := p.line[p.position]
+	current.Check(char)
+	current.Pass()
+
 	p.position++
+	current = p.line[p.position]
+	current.Select()
+
 	return p, nil
 }
