@@ -54,6 +54,7 @@ func New(filePath string) *Program {
 }
 
 func (p *Program) Init() tea.Cmd {
+	p.nextLine()
 	return tea.ClearScreen
 }
 
@@ -101,18 +102,30 @@ func (p *Program) teaQuit() (tea.Model, tea.Cmd) {
 }
 
 func (p *Program) nextLine() (tea.Model, tea.Cmd) {
-	s := p.text.Scan()
-	if !s {
-		return p, tea.Quit
+	for {
+		s := p.text.Scan()
+		if !s {
+			return p.teaQuit()
+		}
+		p.lineRaw = p.text.Text()
+		p.lineRaw = strings.TrimSpace(p.lineRaw)
+		if len(p.lineRaw) > 0 {
+			break
+		}
 	}
-	p.lineRaw = p.text.Text()
-	p.lineRaw = strings.TrimSpace(p.lineRaw)
 	p.position = 0
 	p.line = lines.BrakeString(p.lineRaw)
+	current := p.line[p.position]
+	current.Select()
 	return p, nil
 }
 
 func (p *Program) deleteChar() (tea.Model, tea.Cmd) {
+	if p.position == 0 {
+		current := p.line[p.position]
+		current.Select()
+		return p, nil
+	}
 	current := p.line[p.position]
 	current.Unselect()
 	p.position--
@@ -126,7 +139,7 @@ func (p *Program) checkChar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return p, nil
 	}
 
-	if p.position == len(p.line) {
+	if p.position >= len(p.line) {
 		return p.nextLine()
 	}
 
@@ -136,6 +149,11 @@ func (p *Program) checkChar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	current.Pass()
 
 	p.position++
+
+	if p.position >= len(p.line) {
+		return p.nextLine()
+	}
+
 	current = p.line[p.position]
 	current.Select()
 
