@@ -12,7 +12,7 @@ From root of the project:
 go run ./cil <path>
 ```
 
-![image](https://github.com/user-attachments/assets/8d5946d9-519a-4152-aed1-f66cfd0ad1a4)
+![image](https://github.com/user-attachments/assets/1fe5690b-923c-466b-a03e-403fdec2f03e)
 
 ### Keybindings
 
