@@ -20,30 +20,30 @@ var (
 			BorderLeft(true).
 			BorderRight(true).
 			BorderBottom(true)
-	lineStyle = lipgloss.NewStyle().
-			Align(lipgloss.Left)
 )
 
 type Model struct {
-	position  int
-	lineRaw   string
-	line      []*lines.Character
-	lineWidth int
-	width     int
+	width       int
+	rawText     string
+	lines       []*lines.Line
+	currentLine int
 }
 
 var _ (tea.Model) = (*Model)(nil)
 var _ (model.Sized) = (*Model)(nil)
 var _ (model.SizedModel) = (*Model)(nil)
 
-func New(line string, lineWidth int) *Model {
+func New(text string, width int) *Model {
 	return &Model{
-		lineRaw: line,
+		width:   width,
+		rawText: text,
+		lines:   make([]*lines.Line, 0),
 	}
 }
 
 func (p *Model) Init() tea.Cmd {
-	p.parseLine()
+	p.breakText()
+	p.lines[0].ReturnToEdge()
 	return nil
 }
 
@@ -53,7 +53,7 @@ func (p *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "backspace":
-			return p.deleteChar()
+			return p.deleteChar(msg)
 
 		default:
 			return p.checkChar(msg)
@@ -64,14 +64,13 @@ func (p *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (p *Model) View() string {
 	typerStyle = typerStyle.Width(p.width)
-	lineStyle = lineStyle.Width(p.lineWidth)
 
 	var sb strings.Builder
-	for _, ch := range p.line {
-		sb.WriteString(ch.String())
+	for _, line := range p.lines {
+		sb.WriteString(line.View())
+		sb.WriteRune('\n')
 	}
-	line := lineStyle.Render(sb.String())
-	box := boxStyle.Render(line)
+	box := boxStyle.Render(sb.String())
 	program := typerStyle.Render(box)
 
 	return program
@@ -81,50 +80,60 @@ func (p *Model) Size(width int, height int) {
 	p.width = width
 }
 
-func (p *Model) parseLine() (tea.Model, tea.Cmd) {
-	p.position = 0
-	p.line = lines.BrakeString(p.lineRaw)
-	current := p.line[p.position]
-	current.Select()
+func (p *Model) breakText() (tea.Model, tea.Cmd) {
+	textLines := breakOnLines(p.rawText, p.width-4)
+	for _, line := range textLines {
+		p.lines = append(p.lines, lines.New(line))
+	}
 	return p, nil
 }
 
-func (p *Model) deleteChar() (tea.Model, tea.Cmd) {
-	if p.position == 0 {
-		current := p.line[p.position]
-		current.Select()
-		return p, nil
+func breakOnLines(text string, maxLength int) []string {
+	result := make([]string, 0)
+
+	textLines := strings.Split(strings.ReplaceAll(text, "\t\n", "\n"), "\n")
+	for _, textLine := range textLines {
+		if len(textLine) <= maxLength {
+			textLine = textLine + "\n"
+			result = append(result, textLine)
+			continue
+		}
+		sb := strings.Builder{}
+		for _, word := range strings.Split(textLine, " ") {
+			if sb.Len()+len(word) > maxLength {
+				sb.WriteRune('\n')
+				result = append(result, sb.String())
+				sb.Reset()
+			}
+			if sb.Len() > 0 {
+				sb.WriteRune(' ')
+			}
+			sb.WriteString(word)
+		}
 	}
-	current := p.line[p.position]
-	current.Unselect()
-	p.position--
-	current = p.line[p.position]
-	current.Select()
-	return p, nil
+
+	return result
 }
 
-func (p *Model) checkChar(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if len(msg.Runes) != 1 {
-		return p, nil
+func (m *Model) deleteChar(msg tea.Msg) (tea.Model, tea.Cmd) {
+	currentLine := m.lines[m.currentLine]
+	currentLine.Update(msg)
+	if currentLine.IsOverEdge() {
+		m.currentLine--
+		// TODO: check line
+		currentLine := m.lines[m.currentLine]
+		currentLine.ReturnToEdge()
 	}
-
-	if p.position >= len(p.line) {
-		return p.parseLine()
+	return m, nil
+}
+func (m *Model) checkChar(msg tea.Msg) (tea.Model, tea.Cmd) {
+	currentLine := m.lines[m.currentLine]
+	currentLine.Update(msg)
+	if currentLine.IsOverEdge() {
+		m.currentLine++
+		// TODO: check line
+		currentLine := m.lines[m.currentLine]
+		currentLine.ReturnToEdge()
 	}
-
-	char := msg.Runes[0]
-	current := p.line[p.position]
-	current.Check(char)
-	current.Pass()
-
-	p.position++
-
-	if p.position >= len(p.line) {
-		return p.parseLine()
-	}
-
-	current = p.line[p.position]
-	current.Select()
-
-	return p, nil
+	return m, nil
 }

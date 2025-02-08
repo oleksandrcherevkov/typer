@@ -10,23 +10,22 @@ import (
 )
 
 func main() {
-	line := getLine()
-	p := tea.NewProgram(program.New(line))
+	text := getText()
+	p := tea.NewProgram(program.New(text))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }
 
-func getLine() string {
-
+func getText() string {
 	filePath := getFilePath()
-	line, err := text.GetText(filePath)
+	text, err := text.GetText(filePath)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	return line
+	return text
 }
 
 func getFilePath() string {

@@ -13,9 +13,9 @@ type Program struct {
 	typer model.SizedModel
 }
 
-func New(line string) Program {
+func New(text string) Program {
 	return Program{
-		typer: typer.New(line, 80),
+		typer: typer.New(text, 80),
 	}
 }
 

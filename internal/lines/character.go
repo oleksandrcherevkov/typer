@@ -22,6 +22,7 @@ const (
 )
 
 var (
+	defaultStyle   = lipgloss.NewStyle()
 	correctStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#28ee81")).Background(lipgloss.Color("#197d6e"))
 	wrongStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#8B0000")).Background(lipgloss.Color("#fc785e"))
 	correctedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#af6400")).Background(lipgloss.Color("#ffdd60"))
@@ -46,26 +47,11 @@ func BrakeString(s string) []*Character {
 }
 
 func (ch *Character) String() string {
-	if ch.position == Future {
-		return string(ch.Expected)
+	style, char := ch.render()
+	if char == '\n' {
+		char = '↵'
 	}
-
-	if ch.position == Current {
-		return selectedStyle.Render(string(ch.Expected))
-	}
-
-	switch ch.CheckStatus {
-	case Idle:
-		return string(ch.Expected)
-	case Correct:
-		return correctStyle.Render(string(ch.Typed))
-	case Wrong:
-		return wrongStyle.Render(string(ch.Expected))
-	case Corrected:
-		return correctedStyle.Render(string(ch.Typed))
-	}
-
-	return string(ch.Expected)
+	return style.Render(string(char))
 }
 
 func (ch *Character) Check(char rune) bool {
@@ -99,4 +85,27 @@ func (ch *Character) Unselect() {
 
 func (ch *Character) Pass() {
 	ch.position = Passed
+}
+
+func (ch *Character) render() (lipgloss.Style, rune) {
+	if ch.position == Future {
+		return defaultStyle, ch.Expected
+	}
+
+	if ch.position == Current {
+		return selectedStyle, ch.Expected
+	}
+
+	switch ch.CheckStatus {
+	case Idle:
+		return defaultStyle, ch.Expected
+	case Correct:
+		return correctStyle, ch.Typed
+	case Wrong:
+		return wrongStyle, ch.Expected
+	case Corrected:
+		return correctedStyle, ch.Typed
+	}
+
+	return defaultStyle, ch.Expected
 }

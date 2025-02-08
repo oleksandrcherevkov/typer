@@ -1,27 +1,20 @@
 package text
 
 import (
-	"bufio"
 	"errors"
 	"os"
 	"strings"
 )
 
 func GetText(filePath string) (string, error) {
-	file, err := os.Open(filePath)
+	b, err := os.ReadFile(filePath)
 	if err != nil {
-		return "", errors.New("file can not be opened")
-	}
-	defer file.Close()
-
-	scan := bufio.NewScanner(file)
-
-	s := scan.Scan()
-	if !s {
-		return "", errors.New("file contains no text")
+		return "", errors.New("file can not be read")
 	}
 
-	trimmed := strings.TrimSpace(scan.Text())
+	text := string(b)
+
+	trimmed := strings.TrimSpace(text)
 	if len(trimmed) == 0 {
 		return "", errors.New("file contains no text")
 	}
