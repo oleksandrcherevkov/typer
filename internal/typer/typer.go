@@ -71,9 +71,12 @@ func (p *Model) View() string {
 	typerStyle = typerStyle.Width(p.width)
 
 	var sb strings.Builder
-	for _, line := range p.visibleLines() {
+	for i, line := range p.visibleLines() {
 		sb.WriteString(line.View())
-		sb.WriteRune('\n')
+		notLastLine := i < p.linesWindow-1
+		if notLastLine {
+			sb.WriteRune('\n')
+		}
 	}
 	box := boxStyle.Render(sb.String())
 	program := typerStyle.Render(box)
@@ -150,6 +153,7 @@ func (m *Model) visibleLines() []*lines.Line {
 	endLine := startLine + m.linesWindow
 	if endLine > len(m.lines) {
 		endLine = len(m.lines)
+		startLine = endLine - m.linesWindow
 	}
 	return m.lines[startLine:endLine]
 }
