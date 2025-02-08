@@ -101,7 +101,6 @@ func breakOnLines(text string, maxLength int) []string {
 		sb := strings.Builder{}
 		for _, word := range strings.Split(textLine, " ") {
 			if sb.Len()+len(word) > maxLength {
-				sb.WriteRune('\n')
 				result = append(result, sb.String())
 				sb.Reset()
 			}
@@ -110,6 +109,7 @@ func breakOnLines(text string, maxLength int) []string {
 			}
 			sb.WriteString(word)
 		}
+		result[len(result)-1] = result[len(result)-1] + "\n"
 	}
 
 	return result
