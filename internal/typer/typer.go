@@ -1,40 +1,42 @@
 package typer
 
 import (
-	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/x/term"
 	"github.com/oleksandrcherevkov/typer/internal/lines"
+	"github.com/oleksandrcherevkov/typer/internal/model"
 )
 
-var typerStyle = lipgloss.NewStyle().
-	Align(lipgloss.Center)
-
-var boxStyle = lipgloss.NewStyle().
-	Border(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color("#874BFD")).
-	Padding(0, 1).
-	BorderTop(true).
-	BorderLeft(true).
-	BorderRight(true).
-	BorderBottom(true)
-
-var lineStyle = lipgloss.NewStyle().
-	Align(lipgloss.Left).
-	Width(80)
+var (
+	typerStyle = lipgloss.NewStyle().
+			Align(lipgloss.Center)
+	boxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#874BFD")).
+			Padding(0, 1).
+			BorderTop(true).
+			BorderLeft(true).
+			BorderRight(true).
+			BorderBottom(true)
+	lineStyle = lipgloss.NewStyle().
+			Align(lipgloss.Left)
+)
 
 type Model struct {
-	position int
-	lineRaw  string
-	line     []*lines.Character
+	position  int
+	lineRaw   string
+	line      []*lines.Character
+	lineWidth int
+	width     int
 }
 
 var _ (tea.Model) = (*Model)(nil)
+var _ (model.Sized) = (*Model)(nil)
+var _ (model.SizedModel) = (*Model)(nil)
 
-func New(line string) *Model {
+func New(line string, lineWidth int) *Model {
 	return &Model{
 		lineRaw: line,
 	}
@@ -61,8 +63,9 @@ func (p *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (p *Model) View() string {
-	physicalWight, _, _ := term.GetSize(os.Stdout.Fd())
-	typerStyle = typerStyle.Width(physicalWight)
+	typerStyle = typerStyle.Width(p.width)
+	lineStyle = lineStyle.Width(p.lineWidth)
+
 	var sb strings.Builder
 	for _, ch := range p.line {
 		sb.WriteString(ch.String())
@@ -70,7 +73,12 @@ func (p *Model) View() string {
 	line := lineStyle.Render(sb.String())
 	box := boxStyle.Render(line)
 	program := typerStyle.Render(box)
+
 	return program
+}
+
+func (p *Model) Size(width int, height int) {
+	p.width = width
 }
 
 func (p *Model) parseLine() (tea.Model, tea.Cmd) {

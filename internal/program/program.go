@@ -1,17 +1,21 @@
 package program
 
 import (
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/term"
+	"github.com/oleksandrcherevkov/typer/internal/model"
 	"github.com/oleksandrcherevkov/typer/internal/typer"
 )
 
 type Program struct {
-	typer tea.Model
+	typer model.SizedModel
 }
 
 func New(line string) Program {
 	return Program{
-		typer: typer.New(line),
+		typer: typer.New(line, 80),
 	}
 }
 
@@ -28,12 +32,14 @@ func (p Program) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			cmd = tea.Quit
 		default:
-			p.typer, cmd = p.typer.Update(msg)
+			_, cmd = p.typer.Update(msg)
 		}
 	}
 	return p, cmd
 }
 
 func (p Program) View() string {
+	physicalWight, _, _ := term.GetSize(os.Stdout.Fd())
+	p.typer.Size(physicalWight, 0)
 	return p.typer.View()
 }
