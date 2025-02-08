@@ -22,9 +22,11 @@ var (
 			BorderRight(true).
 			BorderBottom(true)
 )
+var boxTotalHorizontalDelta = 4
 
 type Model struct {
 	width          int
+	boxWidth       int
 	rawText        string
 	lines          []*lines.Line
 	currentLine    int
@@ -36,9 +38,9 @@ var _ (tea.Model) = (*Model)(nil)
 var _ (model.Sized) = (*Model)(nil)
 var _ (model.SizedModel) = (*Model)(nil)
 
-func New(text string, width int, linesWindow int, linesWindowTop int) *Model {
+func New(text string, boxWidth int, linesWindow int, linesWindowTop int) *Model {
 	return &Model{
-		width:          width,
+		boxWidth:       boxWidth,
 		rawText:        text,
 		lines:          make([]*lines.Line, 0),
 		linesWindow:    linesWindow,
@@ -69,6 +71,7 @@ func (p *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (p *Model) View() string {
 	typerStyle = typerStyle.Width(p.width)
+	boxStyle = boxStyle.Width(p.boxWidth)
 
 	var sb strings.Builder
 	for i, line := range p.visibleLines() {
@@ -89,7 +92,7 @@ func (p *Model) Size(width int, height int) {
 }
 
 func (p *Model) breakText() (tea.Model, tea.Cmd) {
-	textLines := text.Lines(p.rawText, p.width-4)
+	textLines := text.Lines(p.rawText, p.boxWidth-boxTotalHorizontalDelta)
 	for _, line := range textLines {
 		p.lines = append(p.lines, lines.New(line))
 	}
