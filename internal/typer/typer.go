@@ -90,24 +90,50 @@ func (p *Model) breakText() (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) deleteChar(msg tea.Msg) (tea.Model, tea.Cmd) {
-	currentLine := m.lines[m.currentLine]
-	currentLine.Update(msg)
-	if currentLine.IsOverEdge() {
-		m.currentLine--
-		// TODO: check line
-		currentLine := m.lines[m.currentLine]
-		currentLine.ReturnToEdge()
+	return m.updateLine(msg, true)
+}
+
+func (m *Model) checkChar(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m.updateLine(msg, false)
+}
+
+func (m *Model) updateLine(msg tea.Msg, delete bool) (tea.Model, tea.Cmd) {
+	line := m.getCurrentLine()
+	line.Update(msg)
+
+	if line.IsOverEdge() {
+		m.moveLine(delete)
 	}
+
 	return m, nil
 }
-func (m *Model) checkChar(msg tea.Msg) (tea.Model, tea.Cmd) {
-	currentLine := m.lines[m.currentLine]
-	currentLine.Update(msg)
-	if currentLine.IsOverEdge() {
-		m.currentLine++
-		// TODO: check line
-		currentLine := m.lines[m.currentLine]
-		currentLine.ReturnToEdge()
+
+func (m *Model) moveLine(delete bool) {
+	if delete {
+		m.prevLine()
+	} else {
+		m.nextLine()
 	}
-	return m, nil
+	line := m.getCurrentLine()
+	line.ReturnToEdge()
+}
+
+func (m *Model) getCurrentLine() *lines.Line {
+	return m.lines[m.currentLine]
+}
+
+func (m *Model) nextLine() {
+	lastLine := m.currentLine == len(m.lines)
+	if lastLine {
+		return
+	}
+	m.currentLine++
+}
+
+func (m *Model) prevLine() {
+	firstLine := m.currentLine == 0
+	if firstLine {
+		return
+	}
+	m.currentLine--
 }
