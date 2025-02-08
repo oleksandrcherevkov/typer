@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/oleksandrcherevkov/typer/internal/lines"
 	"github.com/oleksandrcherevkov/typer/internal/model"
+	"github.com/oleksandrcherevkov/typer/internal/text"
 )
 
 var (
@@ -81,47 +82,11 @@ func (p *Model) Size(width int, height int) {
 }
 
 func (p *Model) breakText() (tea.Model, tea.Cmd) {
-	textLines := breakOnLines(p.rawText, p.width-4)
+	textLines := text.Lines(p.rawText, p.width-4)
 	for _, line := range textLines {
 		p.lines = append(p.lines, lines.New(line))
 	}
 	return p, nil
-}
-
-func breakOnLines(text string, maxLength int) []string {
-	result := make([]string, 0)
-
-	textLines := strings.Split(strings.ReplaceAll(text, "\t\n", "\n"), "\n")
-	for _, textLine := range textLines {
-		if len(textLine) <= maxLength {
-			textLine = textLine + "\n"
-			result = append(result, textLine)
-			continue
-		}
-		sb := strings.Builder{}
-		for _, word := range strings.Split(textLine, " ") {
-			lengthWithNew := sb.Len() + len(word)
-			if lengthWithNew > maxLength {
-				// TODO: review edge cases (string exactly max, one below and one less)
-				if lengthWithNew != maxLength {
-					sb.WriteRune(' ')
-				}
-				result = append(result, sb.String())
-				sb.Reset()
-			}
-			if sb.Len() > 0 {
-				sb.WriteRune(' ')
-			}
-			sb.WriteString(word)
-		}
-		if sb.Len() > 0 {
-			sb.WriteRune('\n')
-			result = append(result, sb.String())
-			sb.Reset()
-		}
-	}
-
-	return result
 }
 
 func (m *Model) deleteChar(msg tea.Msg) (tea.Model, tea.Cmd) {
