@@ -15,7 +15,7 @@ type Program struct {
 
 func New(text string) Program {
 	return Program{
-		typer: typer.New(text, 80),
+		typer: typer.New(text, 80, 5, 2),
 	}
 }
 

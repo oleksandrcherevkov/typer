@@ -24,21 +24,25 @@ var (
 )
 
 type Model struct {
-	width       int
-	rawText     string
-	lines       []*lines.Line
-	currentLine int
+	width          int
+	rawText        string
+	lines          []*lines.Line
+	currentLine    int
+	linesWindow    int
+	linesWindowTop int
 }
 
 var _ (tea.Model) = (*Model)(nil)
 var _ (model.Sized) = (*Model)(nil)
 var _ (model.SizedModel) = (*Model)(nil)
 
-func New(text string, width int) *Model {
+func New(text string, width int, linesWindow int, linesWindowTop int) *Model {
 	return &Model{
-		width:   width,
-		rawText: text,
-		lines:   make([]*lines.Line, 0),
+		width:          width,
+		rawText:        text,
+		lines:          make([]*lines.Line, 0),
+		linesWindow:    linesWindow,
+		linesWindowTop: linesWindowTop,
 	}
 }
 
@@ -67,7 +71,7 @@ func (p *Model) View() string {
 	typerStyle = typerStyle.Width(p.width)
 
 	var sb strings.Builder
-	for _, line := range p.lines {
+	for _, line := range p.visibleLines() {
 		sb.WriteString(line.View())
 		sb.WriteRune('\n')
 	}
@@ -136,4 +140,16 @@ func (m *Model) prevLine() {
 		return
 	}
 	m.currentLine--
+}
+
+func (m *Model) visibleLines() []*lines.Line {
+	startLine := m.currentLine - m.linesWindowTop
+	if m.currentLine < m.linesWindowTop {
+		startLine = 0
+	}
+	endLine := startLine + m.linesWindow
+	if endLine > len(m.lines) {
+		endLine = len(m.lines)
+	}
+	return m.lines[startLine:endLine]
 }

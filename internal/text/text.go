@@ -5,7 +5,7 @@ import "strings"
 func Lines(text string, maxLength int) []string {
 	result := make([]string, 0)
 
-	textLines := strings.Split(strings.ReplaceAll(text, "\t\n", "\n"), "\n")
+	textLines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
 	for _, textLine := range textLines {
 		if len(textLine) <= maxLength {
 			textLine = textLine + "\n"
